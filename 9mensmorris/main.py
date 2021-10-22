@@ -277,7 +277,6 @@ class NineMensMorris(TwoPlayerGame):
 
 if __name__ == "__main__":
     ai_algo = Negamax(2)
-    #NineMensMorris([AI_Player(ai_algo), AI_Player(ai_algo)]).play(200)
-    NineMensMorris([AI_Player, AI_Player(ai_algo)]).play(200)
+    NineMensMorris([AI_Player(ai_algo), AI_Player(ai_algo)]).play(200)
 
 
