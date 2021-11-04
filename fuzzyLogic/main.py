@@ -3,45 +3,55 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-print(np.arange(0, 201, 1))
 
-localization = ctrl.Antecedent(np.arange(0, 3, 1), 'localization')
-number_of_rooms = ctrl.Antecedent(np.arange(0, 10, 1), 'number_of_rooms')
-floor = ctrl.Antecedent(np.arange(0, 10, 1), 'floor')
+#wejścia
+localization = ctrl.Antecedent(np.arange(0, 5, 1), 'localization')
+number_of_rooms = ctrl.Antecedent(np.arange(0, 11, 1), 'number_of_rooms')
+floor = ctrl.Antecedent(np.arange(0, 11, 1), 'floor')
 
-price_per_square_meter = ctrl.Consequent(np.arange(3000, 20000, 100), 'price_per_square_meter')
+#wyjście
+price_per_square_meter = ctrl.Consequent(np.arange(3000, 20001, 1), 'price_per_square_meter')
+
 
 localization.automf(3)
-number_of_rooms.automf(5)
-floor.automf(5)
+number_of_rooms.automf(3)
+floor.automf(3)
 
-price_per_square_meter['low'] = fuzz.trimf(price_per_square_meter.universe, [0, 0, 8000])
-price_per_square_meter['medium'] = fuzz.trimf(price_per_square_meter.universe, [8000, 10000, 15000])
-price_per_square_meter['high'] = fuzz.trimf(price_per_square_meter.universe, [15000, 20000, 20000])
+price_per_square_meter['low'] = fuzz.trimf(price_per_square_meter.universe, [3000, 3000, 10000])
+price_per_square_meter['medium'] = fuzz.trimf(price_per_square_meter.universe, [3000, 3000, 20000])
+price_per_square_meter['high'] = fuzz.trimf(price_per_square_meter.universe, [10000, 20000, 20000])
 
 price_per_square_meter.view()
 
-rule1 = ctrl.Rule(localization['poor'] & floor['poor'] & number_of_rooms['poor'], price_per_square_meter['low'])
-rule2 = ctrl.Rule(localization['poor'] & (floor['poor'] | floor['mediocre']), price_per_square_meter['low'])
-rule3 = ctrl.Rule((localization['poor'] | floor['poor']) & (number_of_rooms['average'] | number_of_rooms['decent']), price_per_square_meter['low'])
+rule1 = ctrl.Rule(antecedent=((floor['poor'] & localization['poor'] & number_of_rooms['average']) |
+                              (floor['poor'] & localization['poor']) |
+                              (floor['average'] & localization['poor'] & number_of_rooms['poor']) |
+                              floor['poor'] & localization['poor'] & number_of_rooms['good']),
+                  consequent=price_per_square_meter['low'])
 
-rule4 = ctrl.Rule(localization['average'] & floor['average'] & number_of_rooms['average'], price_per_square_meter['medium'])
-rule5 = ctrl.Rule(localization['average'] & floor['decent'] & number_of_rooms['decent'], price_per_square_meter['medium'])
-rule6 = ctrl.Rule(localization['poor'] & floor['good'], price_per_square_meter['medium'])
-rule7 = ctrl.Rule((localization['average'] | floor['decent']) & number_of_rooms['mediocre'], price_per_square_meter['medium'])
-rule8 = ctrl.Rule(floor['good'] & (number_of_rooms['average'] | number_of_rooms['good']), price_per_square_meter['medium'])
+rule2 = ctrl.Rule(antecedent=((floor['good'] & localization['poor'] & number_of_rooms['poor']) |
+                              (floor['poor'] & localization['poor'] & number_of_rooms['good']) |
+                              (floor['poor'] & localization['average']) |
+                              (floor['good'] & localization['poor'] & number_of_rooms['good']) |
+                              (floor['average'] & localization['average'] & number_of_rooms['average']) |
+                              (floor['poor'] & localization['good'] & number_of_rooms['poor'])),
+                  consequent=price_per_square_meter['medium'])
 
-rule9 = ctrl.Rule(localization['good'] & (floor['good'] | floor['decent']) & number_of_rooms['poor'], price_per_square_meter['high'])
-rule10 = ctrl.Rule(localization['good'] & number_of_rooms['mediocre'], price_per_square_meter['high'])
-rule11 = ctrl.Rule(floor['good'] & number_of_rooms['average'], price_per_square_meter['high'])
+rule3 = ctrl.Rule(antecedent=((floor['good'] & localization['good'] & number_of_rooms['good']) |
+                              (floor['poor'] & localization['good'] & number_of_rooms['good']) |
+                              (floor['average'] & localization['good'] & number_of_rooms['average']) |
+                              (floor['good'] & localization['good']) |
+                              (floor['average'] & localization['good'] & number_of_rooms['good'])),
+                  consequent=price_per_square_meter['high'])
 
+rule2.view()
 
-tipping_ctrl = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6])
+tipping_ctrl = ctrl.ControlSystem([rule1, rule2, rule3])
 tipping = ctrl.ControlSystemSimulation(tipping_ctrl)
 
-tipping.input['localization'] = 0
-tipping.input['floor'] = 1
-tipping.input['number_of_rooms'] = 3
+tipping.input['localization'] = 2
+tipping.input['floor'] = 4
+tipping.input['number_of_rooms'] = 7
 
 tipping.compute()
 price_per_square_meter.view(sim=tipping)
