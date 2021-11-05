@@ -1,0 +1,2 @@
+numpy~=1.21.3
+scikit-fuzzy~=0.4.2
